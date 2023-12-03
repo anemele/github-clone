@@ -13,7 +13,8 @@ from .log import logger
 from .parser import check, parse_url_batch
 
 
-def git_clone(ur: str, dst: Path, *, config):
+def git_clone(ur: str, dst: str | Path, *, config):
+    dst = GITHUB_ROOT_PATH / dst
     url = f'{SSH_URL}{ur}.git'
     cmd = f'git clone {url} {dst} {config}'
     logger.info(cmd)
@@ -22,6 +23,10 @@ def git_clone(ur: str, dst: Path, *, config):
         logger.info(f'done: {dst}, url={url}')
     else:
         logger.error(f'failed: {ur}')
+        try:
+            dst.parent.rmdir()
+        except:
+            pass
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -38,12 +43,6 @@ def create_parser() -> argparse.ArgumentParser:
         '--no-user',
         action='store_true',
         help='use `repo` instead of `user/repo`',
-    )
-    parser.add_argument(
-        '--root',
-        type=Path,
-        help='where to put GitHub repo',
-        default=GITHUB_ROOT_PATH,
     )
     parser.add_argument(
         '--check',
@@ -75,7 +74,6 @@ def main():
 
     args_file: Optional[Path] = args.file
     args_url: list[str] = args.url
-    args_root: Path = args.root
     args_check: bool = args.check
     args_no_user: bool = args.no_user
     args_config: str = args.config
@@ -98,4 +96,4 @@ def main():
     for user, repo in ur_list:
         ur = f'{user}/{repo}'
         dst = repo if args_no_user else ur
-        git_clone(ur, args_root / dst, config=config)
+        git_clone(ur, dst, config=config)
