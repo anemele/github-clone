@@ -13,16 +13,22 @@ from .log import logger
 from .parser import check, parse_url_batch
 
 
-def git_clone(ur: str, dst: str | Path, *, config):
-    dst = GITHUB_ROOT_PATH / dst
-    url = f'{SSH_URL}{ur}.git'
+def git_clone(
+    user: str,
+    repo: str,
+    dst: Optional[Path],
+    *,
+    config,
+):
+    url = f'{SSH_URL}{user}/{repo}.git'
+    dst = GITHUB_ROOT_PATH / f'{user}/{dst or repo}'
     cmd = f'git clone {url} {dst} {config}'
     logger.info(cmd)
     cp = subprocess.run(cmd)
     if cp.returncode == 0:
         logger.info(f'done: {dst}, url={url}')
     else:
-        logger.error(f'failed: {ur}')
+        logger.error(f'failed: {user}/{repo}')
         try:
             dst.parent.rmdir()
         except:
@@ -39,10 +45,10 @@ def create_parser() -> argparse.ArgumentParser:
         help='read github repo url from a file, one line per url',
     )
     parser.add_argument(
-        '-n',
-        '--no-user',
-        action='store_true',
-        help='use `repo` instead of `user/repo`',
+        '-d',
+        '--dest',
+        type=Path,
+        help='replace `user/repo` with `user/dest`',
     )
     parser.add_argument(
         '--check',
@@ -74,8 +80,8 @@ def main():
 
     args_file: Optional[Path] = args.file
     args_url: list[str] = args.url
+    args_dest: Optional[Path] = args.dest
     args_check: bool = args.check
-    args_no_user: bool = args.no_user
     args_config: str = args.config
 
     url_list = args_url
@@ -94,6 +100,4 @@ def main():
     config = f'{CONFIG} {args_config}'
 
     for user, repo in ur_list:
-        ur = f'{user}/{repo}'
-        dst = repo if args_no_user else ur
-        git_clone(ur, dst, config=config)
+        git_clone(user, repo, args_dest, config=config)
