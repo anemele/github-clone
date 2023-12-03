@@ -1,7 +1,8 @@
 from typing import Optional
 
-from .constants import GITHUB_HTTP, PATTERN
-from .types import G_Ts, Ls_Gs
+from .constants import HTTP_URL, PATTERN
+from .log import logger
+from .types import G_Ts
 
 
 def parse_url(url: str) -> Optional[tuple[str, str]]:
@@ -13,17 +14,17 @@ def parse_url(url: str) -> Optional[tuple[str, str]]:
     return it.group(1), it.group(2)
 
 
-def parse_url_batch(url_list: Ls_Gs) -> G_Ts:
+def parse_url_batch(url_list: list[str]) -> G_Ts:
     for url in url_list:
         sth = parse_url(url)
         if sth is None:
-            print(f'[ERROR] invalid url: {url}')
+            logger.warning(f'invalid url: {url}')
             continue
         yield sth
 
 
-def check(url_list: Ls_Gs) -> None:
+def check(url_list: list[str]) -> None:
     ur_list = parse_url_batch(url_list)
     for u, r in ur_list:
-        url = f'{GITHUB_HTTP}{u}/{r}.git'
-        print(url)
+        url = f'{HTTP_URL}{u}/{r}.git'
+        logger.info(f'{url}')

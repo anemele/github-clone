@@ -1,36 +1,27 @@
 """ GitHub clone.
-git clone from github.com or its mirror sites
-into a folder named {user}/{repo}
-to avoid name collision.
+    `git clone` from github.com into a folder named `{user}/{repo}`
+    to avoid name collision.
 """
 import argparse
-import os
-import os.path
 import subprocess
-from typing import Optional
+from pathlib import Path
+from typing import Iterable, Optional
 
 from .config import CONFIG
-from .constants import GITHUB_ROOT_PATH, GITHUB_URL_LIST
+from .constants import GIT_CONFIG_FILE, GITHUB_ROOT_PATH, SSH_URL
+from .log import logger
 from .parser import check, parse_url_batch
-from .types import Ls_Gs
 
 
-def git_clone(ur: str, dst: str, *, config) -> str:
-    dst = os.path.join(GITHUB_ROOT_PATH, dst)
-    if os.path.exists(dst) and os.listdir(dst):
-        return f'[ERROR] exists: {dst}'
-
-    for github in GITHUB_URL_LIST:
-        url = f'{github}{ur}.git'
-        # return True
-        # NOTICE! Here clones into a folder named `user/repo`
-        cmd = f'git clone {url} {dst} {config}'
-        print(cmd)
-        cp = subprocess.run(cmd)
-        if cp.returncode == 0:
-            return f'[INFO] done: {ur}, url: {url}'
-
-    return f'[ERROR] failed: {ur}'
+def git_clone(ur: str, dst: Path, *, config):
+    url = f'{SSH_URL}{ur}.git'
+    cmd = f'git clone {url} {dst} {config}'
+    logger.info(cmd)
+    cp = subprocess.run(cmd)
+    if cp.returncode == 0:
+        logger.info(f'done: {dst}, url={url}')
+    else:
+        logger.error(f'failed: {ur}')
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -39,7 +30,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '-f',
         '--file',
-        type=str,
+        type=Path,
         help='read github repo url from a file, one line per url',
     )
     parser.add_argument(
@@ -49,15 +40,31 @@ def create_parser() -> argparse.ArgumentParser:
         help='use `repo` instead of `user/repo`',
     )
     parser.add_argument(
+        '--root',
+        type=Path,
+        help='where to put GitHub repo',
+        default=GITHUB_ROOT_PATH,
+    )
+    parser.add_argument(
         '--check',
         action='store_true',
         help='do not clone, check validation',
     )
     parser.add_argument(
         '--config',
-        help='temp config',
+        help=f'git configs (wrapped with a pair of QUOTE). or save in a file: `{GIT_CONFIG_FILE}`',
+        default='',
     )
     return parser
+
+
+def get_url_list_from_file(file: Path) -> Iterable[str]:
+    try:
+        return (line.rstrip() for line in file.read_text().strip().splitlines())
+    except Exception as e:
+        logger.warning(e)
+
+    return ()
 
 
 def main():
@@ -66,38 +73,29 @@ def main():
     # print(args)
     # return
 
-    args_file: str = args.file
+    args_file: Optional[Path] = args.file
     args_url: list[str] = args.url
+    args_root: Path = args.root
     args_check: bool = args.check
     args_no_user: bool = args.no_user
-    args_config: Optional[str] = args.config
+    args_config: str = args.config
 
-    url_list: Ls_Gs
-    if args_file is not None and os.path.isfile(args_file):
-        try:
-            with open(args_file) as fp:
-                url_list = (line.rstrip() for line in fp.readlines())
-        except Exception as e:
-            print(e)
-            url_list = args_url
-    else:
-        if len(args_url) == 0:
-            parser.print_usage()
-            return
+    url_list = args_url
+    if args_file is not None and args_file.is_file():
+        url_list.extend(get_url_list_from_file(args_file))
 
-        url_list = args_url
+    if len(url_list) == 0:
+        parser.print_usage()
+        return
 
     if args_check:
         check(url_list)
         return
 
     ur_list = parse_url_batch(url_list)
-    if args_config is not None:
-        config = f'{CONFIG} {args_config}'
-    else:
-        config = CONFIG
+    config = f'{CONFIG} {args_config}'
+
     for user, repo in ur_list:
         ur = f'{user}/{repo}'
         dst = repo if args_no_user else ur
-        msg = git_clone(ur, dst, config=config)
-        print(msg)
+        git_clone(ur, args_root / dst, config=config)

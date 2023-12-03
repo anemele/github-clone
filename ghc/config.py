@@ -1,12 +1,17 @@
-import os.path
 import tomllib
 
 from .constants import GIT_CONFIG_FILE, GITHUB_ROOT_PATH
 
-with open(os.path.join(GITHUB_ROOT_PATH, GIT_CONFIG_FILE), 'rb') as fp:
-    config = tomllib.load(fp)
 
-config = config.get('config')
-assert config is not None
+def _get_config() -> str:
+    file = GITHUB_ROOT_PATH / GIT_CONFIG_FILE
+    if not file.exists():
+        return ''
 
-CONFIG = ' '.join(f'--{k}={v}' for k, v in config.items())
+    with open(file, 'rb') as fp:
+        config = tomllib.load(fp)
+
+    return ' '.join(f'--{k}={v}' for k, v in config.get('config', {}).items())
+
+
+CONFIG = _get_config()
