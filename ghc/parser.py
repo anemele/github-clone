@@ -13,7 +13,7 @@ def parse_url(url: str) -> tuple[str, str] | None:
     return it.group(1), it.group(2)
 
 
-def parse_url_batch(url_list: list[str]) -> Iterable[tuple[str, str]]:
+def parse_url_batch(url_list: Iterable[str]) -> Iterable[tuple[str, str]]:
     for url in url_list:
         sth = parse_url(url)
         if sth is None:
