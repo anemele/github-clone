@@ -1,16 +1,27 @@
+import re
 from typing import Iterable
 
-from .consts import HTTP_URL, PATTERN
+from .consts import HTTP_URL
 from .log import logger
+
+PATTERN = re.compile(r'^(?:https://[\w\.\-]+/)|(?:git@[\w\.\-]+:)')
 
 
 def parse_url(url: str) -> tuple[str, str] | None:
     """parse github repo url,
     return (username, reponame)"""
-    it = PATTERN.search(url)
-    if it is None:
-        return
-    return it.group(1), it.group(2)
+    s = PATTERN.search(url)
+    if s is not None:
+        url = url[s.end() :]
+
+    it = url.split('/', 2)
+    match len(it):
+        case 1:
+            return
+        case 2:
+            return it[0], it[1].removesuffix('.git')
+        case 3:
+            return it[0], it[1]
 
 
 def parse_url_batch(url_list: Iterable[str]) -> Iterable[tuple[str, str]]:
