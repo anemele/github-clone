@@ -1,11 +1,10 @@
-from typing import Optional
+from typing import Iterable
 
-from .constants import HTTP_URL, PATTERN
+from .consts import HTTP_URL, PATTERN
 from .log import logger
-from .types import G_Ts
 
 
-def parse_url(url: str) -> Optional[tuple[str, str]]:
+def parse_url(url: str) -> tuple[str, str] | None:
     """parse github repo url,
     return (username, reponame)"""
     it = PATTERN.search(url)
@@ -14,7 +13,7 @@ def parse_url(url: str) -> Optional[tuple[str, str]]:
     return it.group(1), it.group(2)
 
 
-def parse_url_batch(url_list: list[str]) -> G_Ts:
+def parse_url_batch(url_list: list[str]) -> Iterable[tuple[str, str]]:
     for url in url_list:
         sth = parse_url(url)
         if sth is None:

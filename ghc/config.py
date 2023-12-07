@@ -1,6 +1,6 @@
 import tomllib
 
-from .constants import GIT_CONFIG_FILE, GITHUB_ROOT_PATH
+from .consts import GIT_CONFIG_FILE, GITHUB_ROOT_PATH
 
 
 def _get_config() -> str:
