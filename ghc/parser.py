@@ -5,6 +5,7 @@ from .consts import HTTP_URL
 from .log import logger
 
 PATTERN = re.compile(r'^(?:https://[\w\.\-]+/)|(?:git@[\w\.\-]+:)')
+PATTERN2 = re.compile(r'([\w-]+)/([\w\.-]+)')
 
 
 def parse_url(url: str) -> tuple[str, str] | None:
@@ -14,14 +15,15 @@ def parse_url(url: str) -> tuple[str, str] | None:
     if s is not None:
         url = url[s.end() :]
 
-    it = url.removeprefix('/').split('/', 2)
-    match len(it):
-        case 1:
-            return
-        case 2:
-            return it[0], it[1].removesuffix('.git')
-        case 3:
-            return it[0], it[1]
+    url = url.removeprefix('/')
+    s2 = PATTERN2.match(url)
+    if s2 is None:
+        return
+
+    user, repo = s2.groups()
+    if s2.end() == s2.endpos or url[s2.end()] != '/':
+        repo = repo.removesuffix('.git')
+    return user, repo
 
 
 def parse_url_batch(url_list: Iterable[str]) -> Iterable[tuple[str, str]]:

@@ -12,7 +12,7 @@ def test_parse_url_1():
     assert f('x/y') == 'x/y'
     assert f('x/y.git') == 'x/y'
     assert f('/x/y') == 'x/y'
-    assert f('/x/y.git') == 'x/y'    
+    assert f('/x/y.git') == 'x/y'
     assert f('https://github.com/x/y') == 'x/y'
     assert f('https://github.com/x/y.git') == 'x/y'
     assert f('git@github.com:x/y') == 'x/y'
@@ -33,6 +33,17 @@ def test_parse_url_1():
 def test_parse_url_2():
     assert f('xy') is None
     assert f('https://github.com/xy') is None
+
+
+def test_parse_url_4():
+    assert f('https://github.com/[]/{}') is None
+    assert f('git@github.com:[]/{}') is None
+    assert f('git@github.com:/[]/{}') is None
+
+
+def test_parse_url_5():
+    assert f('https:///x/y') is None
+    assert f('git@:/x/y') is None
 
 
 def test_parse_url_3():
