@@ -14,7 +14,7 @@ def parse_url(url: str) -> tuple[str, str] | None:
     if s is not None:
         url = url[s.end() :]
 
-    it = url.split('/', 2)
+    it = url.removeprefix('/').split('/', 2)
     match len(it):
         case 1:
             return

@@ -1,5 +1,3 @@
-import pytest
-
 from .parser import parse_url, parse_url_batch
 
 
@@ -13,6 +11,8 @@ def f(url):
 def test_parse_url_1():
     assert f('x/y') == 'x/y'
     assert f('x/y.git') == 'x/y'
+    assert f('/x/y') == 'x/y'
+    assert f('/x/y.git') == 'x/y'    
     assert f('https://github.com/x/y') == 'x/y'
     assert f('https://github.com/x/y.git') == 'x/y'
     assert f('git@github.com:x/y') == 'x/y'
@@ -35,13 +35,13 @@ def test_parse_url_2():
     assert f('https://github.com/xy') is None
 
 
-# @pytest.mark.xfail
 def test_parse_url_3():
-    assert f('a/b/c/x/y') == 'a/b'  # 'x/y'  # how to parse this?
+    assert f('a/b/c/x/y') == 'a/b'
     assert f('a/b.git/c/x/y') == 'a/b.git'
     assert f('a/b/c/x/y.git') == 'a/b'
     assert f('a/b.git/c/x/y.git') == 'a/b.git'
     assert f('a/b.git/c.git/x.git/y.git') == 'a/b.git'
+    assert f('/a/b.git/c.git/x.git/y.git') == 'a/b.git'
 
     assert f('https://github.com/x/y/issues') == 'x/y'
     assert f('https://github.com/x/y.git/issues') == 'x/y.git'
