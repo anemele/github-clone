@@ -7,7 +7,9 @@ from .consts import GIT_CONFIG_FILE
 from .core import get_url_list_from_file, git_clone
 from .parser import check, parse_url_batch
 
-parser = argparse.ArgumentParser(sys.argv[1], description=__doc__)
+parser = argparse.ArgumentParser(
+    prog=__package__ if len(sys.argv) == 1 else sys.argv[1], description=__doc__
+)
 parser.add_argument('url', type=str, nargs='*', help='github repo url')
 parser.add_argument(
     '-f',
