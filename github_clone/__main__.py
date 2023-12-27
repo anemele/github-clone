@@ -1,5 +1,4 @@
 import argparse
-import sys
 from pathlib import Path
 
 from .config import CONFIG
@@ -7,9 +6,7 @@ from .consts import GIT_CONFIG_FILE
 from .core import get_url_list_from_file, git_clone
 from .parser import check, parse_url_batch
 
-parser = argparse.ArgumentParser(
-    prog=__package__ if len(sys.argv) == 1 else sys.argv[1], description=__doc__
-)
+parser = argparse.ArgumentParser(prog=__package__, description=__doc__)
 parser.add_argument('url', type=str, nargs='*', help='github repo url')
 parser.add_argument(
     '-f',
@@ -34,7 +31,7 @@ parser.add_argument(
     default='',
 )
 
-args = parser.parse_args(sys.argv[2:])
+args = parser.parse_args()
 
 args_file: Path | None = args.file
 args_url: list[str] = args.url
